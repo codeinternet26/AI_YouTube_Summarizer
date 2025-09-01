@@ -1,21 +1,28 @@
 import os
 import streamlit as st
-from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
 from openai import OpenAI
 
-# Load API key from .env
-load_dotenv()
+# Load API key locally if .env exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # If dotenv isn't installed, just skip (Streamlit Cloud won't need it)
+
+# Get API key from environment
 api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    st.error("OpenAI API key not found! Please set it in .env or Streamlit Secrets.")
+
+# Initialize OpenAI client
 client = OpenAI(api_key=api_key)
 
 st.title("🎥 AI YouTube Summarizer")
 st.write("Paste a YouTube link and get a summary, key insights, and quiz questions!")
 
-# Input box for YouTube link
 video_url = st.text_input("Enter YouTube link:")
 
-# Function to extract video ID from URL
 def extract_video_id(url):
     if "v=" in url:
         return url.split("v=")[1].split("&")[0]
@@ -24,10 +31,9 @@ def extract_video_id(url):
     else:
         return None
 
-# Button to generate summary
 if st.button("Summarize Video"):
     if not api_key:
-        st.error("No API key found. Please set it in your .env or Streamlit secrets.")
+        st.error("No API key found!")
     elif not video_url:
         st.error("Please paste a YouTube link.")
     else:
